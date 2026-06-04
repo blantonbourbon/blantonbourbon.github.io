@@ -29,7 +29,7 @@ export async function GET({ params }) {
       await rss({
         title: "Kratos's blog",
         description: 'A place to write down my tech life.',
-        site: 'https://johnwick.blog',
+        site: 'https://blantonbourbon.github.io',
         items: posts,
       })
     ).body,

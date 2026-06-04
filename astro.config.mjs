@@ -45,7 +45,7 @@ export default defineConfig({
     prefetchAll: true,
     defaultStrategy: 'viewport',
   },
-  site: 'https://johnwick.blog',
+  site: 'https://blantonbourbon.github.io',
   scopedStyleStrategy: 'class',
   // trailingSlash: 'always',
   build: {

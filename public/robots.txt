@@ -1,4 +1,4 @@
 User-agent: *
 Allow: /
 
-Sitemap: https://johnwick.blog/sitemap-index.xml
+Sitemap: https://blantonbourbon.github.io/sitemap-index.xml
