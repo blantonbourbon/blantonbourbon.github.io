@@ -16,7 +16,7 @@ if (!post) {
     statusText: 'Not found',
   })
 }
-const readingStats = calculateReadingStats(post.body, 'zh')
+const readingStats = calculateReadingStats(post.body ?? '', 'zh')
 const { title, tags, date, lastModified, notificationTypes } = post.data
 const { Content } = await render(post)
 

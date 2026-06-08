@@ -16,7 +16,7 @@ if (!post) {
     statusText: 'Not found',
   })
 }
-const readingStats = calculateReadingStats(post.body, 'en')
+const readingStats = calculateReadingStats(post.body ?? '', 'en')
 const {
   title,
   'title-en': titleEn,

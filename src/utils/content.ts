@@ -1,3 +1,4 @@
+import { existsSync, readdirSync } from 'node:fs'
 import { getCollection, type CollectionEntry } from 'astro:content'
 import { DateTime } from 'luxon'
 import type {
@@ -16,6 +17,24 @@ interface PostCatalogOptions {
 }
 
 const DEFAULT_LOCALE: SupportedLocale = 'zh'
+const postsDirectory = new URL('../content/posts/', import.meta.url)
+
+// src/content is a submodule; fresh checkouts may not have post files.
+function hasContentFiles(directory: URL): boolean {
+  if (!existsSync(directory)) return false
+
+  return readdirSync(directory, { withFileTypes: true }).some((entry) => {
+    if (entry.isDirectory()) {
+      return hasContentFiles(new URL(`${entry.name}/`, directory))
+    }
+    return /\.(md|mdx)$/i.test(entry.name)
+  })
+}
+
+async function getPostEntries(): Promise<PostEntry[]> {
+  if (!hasContentFiles(postsDirectory)) return []
+  return getCollection('posts')
+}
 
 function normalizeLocale(locale?: string): SupportedLocale {
   return locale === 'en' ? 'en' : DEFAULT_LOCALE
@@ -24,6 +43,13 @@ function normalizeLocale(locale?: string): SupportedLocale {
 function getEntryLocale(slug: string): SupportedLocale | undefined {
   if (slug.startsWith('zh/')) return 'zh'
   if (slug.startsWith('en/')) return 'en'
+}
+
+function getEntrySlug(entry: PostEntry): string {
+  if ('slug' in entry && typeof entry.slug === 'string') {
+    return entry.slug
+  }
+  return entry.id
 }
 
 function getRouteSlug(slug: string): string {
@@ -49,7 +75,7 @@ function isVisiblePost(entry: PostEntry): boolean {
 }
 
 function getDisplayTitle(entry: PostEntry, locale: SupportedLocale): string {
-  const routeSlug = getRouteSlug(entry.slug)
+  const routeSlug = getRouteSlug(getEntrySlug(entry))
   if (locale === 'en')
     return entry.data['title-en'] || entry.data.title || routeSlug
   return entry.data.title || entry.data['title-en'] || routeSlug
@@ -68,10 +94,11 @@ function sortPosts(posts: Post[]): Post[] {
 }
 
 function toCatalogPost(entry: PostEntry): Post | undefined {
-  const locale = getEntryLocale(entry.slug)
+  const slug = getEntrySlug(entry)
+  const locale = getEntryLocale(slug)
   if (!locale || !isVisiblePost(entry)) return
 
-  const routeSlug = getRouteSlug(entry.slug)
+  const routeSlug = getRouteSlug(slug)
   const tags = entry.data.tags ?? []
 
   return {
@@ -79,7 +106,7 @@ function toCatalogPost(entry: PostEntry): Post | undefined {
     displayTitle: getDisplayTitle(entry, locale),
     tags,
     url: getPostUrl(locale, routeSlug),
-    slug: entry.slug,
+    slug,
     routeSlug,
     locale,
   }
@@ -116,7 +143,7 @@ export const getPostCatalog = async (
   options: PostCatalogOptions = {},
 ): Promise<PostCollection> => {
   const normalizedLocale = normalizeLocale(locale)
-  const allPosts = await getCollection('posts')
+  const allPosts = await getPostEntries()
   const localePosts = sortPosts(
     allPosts.map(toCatalogPost).filter((post): post is Post => {
       if (!post) return false
@@ -151,11 +178,11 @@ export async function getPostStaticPaths(locale: string) {
 }
 
 export async function getFeedPosts(): Promise<PostFeedItem[]> {
-  const allPosts = await getCollection('posts')
+  const allPosts = await getPostEntries()
   return sortPosts(
     allPosts.map(toCatalogPost).filter((post): post is Post => Boolean(post)),
   ).map((post) => {
-    const entry = allPosts.find((item) => item.slug === post.slug)
+    const entry = allPosts.find((item) => getEntrySlug(item) === post.slug)
     return {
       ...post,
       body: entry?.body ?? '',
