@@ -1,8 +1,8 @@
-const CACHE_NAME = 'blog-cache-v2'
-const RUNTIME_CACHE = 'blog-runtime-v2'
+const CACHE_NAME = 'blog-cache-v3'
+const RUNTIME_CACHE = 'blog-runtime-v3'
 
 // 静态资源缓存策略
-const STATIC_CACHE_URLS = ['/', '/favicon.ico']
+const STATIC_CACHE_URLS = ['/', '/favicon.svg']
 
 // 需要缓存的资源类型
 const CACHEABLE_EXTENSIONS = [
