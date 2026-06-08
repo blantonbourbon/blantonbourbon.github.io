@@ -1,4 +1,3 @@
-import { existsSync, readdirSync } from 'node:fs'
 import { getCollection, type CollectionEntry } from 'astro:content'
 import { DateTime } from 'luxon'
 import type {
@@ -17,24 +16,6 @@ interface PostCatalogOptions {
 }
 
 const DEFAULT_LOCALE: SupportedLocale = 'zh'
-const postsDirectory = new URL('../content/posts/', import.meta.url)
-
-// src/content is a submodule; fresh checkouts may not have post files.
-function hasContentFiles(directory: URL): boolean {
-  if (!existsSync(directory)) return false
-
-  return readdirSync(directory, { withFileTypes: true }).some((entry) => {
-    if (entry.isDirectory()) {
-      return hasContentFiles(new URL(`${entry.name}/`, directory))
-    }
-    return /\.(md|mdx)$/i.test(entry.name)
-  })
-}
-
-async function getPostEntries(): Promise<PostEntry[]> {
-  if (!hasContentFiles(postsDirectory)) return []
-  return getCollection('posts')
-}
 
 function normalizeLocale(locale?: string): SupportedLocale {
   return locale === 'en' ? 'en' : DEFAULT_LOCALE
@@ -143,7 +124,7 @@ export const getPostCatalog = async (
   options: PostCatalogOptions = {},
 ): Promise<PostCollection> => {
   const normalizedLocale = normalizeLocale(locale)
-  const allPosts = await getPostEntries()
+  const allPosts = await getCollection('posts')
   const localePosts = sortPosts(
     allPosts.map(toCatalogPost).filter((post): post is Post => {
       if (!post) return false
@@ -178,7 +159,7 @@ export async function getPostStaticPaths(locale: string) {
 }
 
 export async function getFeedPosts(): Promise<PostFeedItem[]> {
-  const allPosts = await getPostEntries()
+  const allPosts = await getCollection('posts')
   return sortPosts(
     allPosts.map(toCatalogPost).filter((post): post is Post => Boolean(post)),
   ).map((post) => {

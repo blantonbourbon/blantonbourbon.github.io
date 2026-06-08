@@ -1,4 +1,3 @@
-import { existsSync, readdirSync } from 'node:fs'
 import { defineCollection, z } from 'astro:content'
 
 const postSchema = z.object({
@@ -12,29 +11,10 @@ const postSchema = z.object({
   url: z.string().optional(),
 })
 
-const postsDirectory = new URL('./content/posts/', import.meta.url)
-
-// src/content is a submodule; fresh checkouts may not have post files.
-function hasContentFiles(directory: URL): boolean {
-  if (!existsSync(directory)) return false
-
-  return readdirSync(directory, { withFileTypes: true }).some((entry) => {
-    if (entry.isDirectory()) {
-      return hasContentFiles(new URL(`${entry.name}/`, directory))
-    }
-    return /\.(md|mdx)$/i.test(entry.name)
-  })
-}
-
-const posts = hasContentFiles(postsDirectory)
-  ? defineCollection({
-      type: 'content',
-      schema: postSchema,
-    })
-  : defineCollection({
-      loader: () => [],
-      schema: postSchema,
-    })
+const posts = defineCollection({
+  type: 'content',
+  schema: postSchema,
+})
 
 export const collections = {
   posts,
