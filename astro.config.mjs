@@ -40,7 +40,7 @@ export default defineConfig({
     enabled: false,
   },
   prefetch: false,
-  site: 'https://blantonbourbon.github.io',
+  site: 'https://blog.changshaking.xyz',
   scopedStyleStrategy: 'class',
   // trailingSlash: 'always',
   build: {

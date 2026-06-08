@@ -25,7 +25,7 @@ export async function GET() {
       await rss({
         title: "Kratos's blog",
         description: 'A place to write down my tech life.',
-        site: 'https://blantonbourbon.github.io',
+        site: 'https://blog.changshaking.xyz',
         items: posts,
       })
     ).body,
