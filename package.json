@@ -2,6 +2,7 @@
   "name": "kratos.blog",
   "type": "module",
   "version": "0.0.1",
+  "packageManager": "pnpm@10.23.0",
   "scripts": {
     "dev": "astro dev",
     "start": "astro dev",
@@ -44,6 +45,7 @@
     "@types/luxon": "latest",
     "@types/markdown-it": "latest",
     "@types/node": "^24.10.4",
+    "@unocss/astro": "^66.7.0",
     "hastscript": "latest",
     "mdast-util-to-string": "latest",
     "mdast-util-wiki-link": "latest",
@@ -52,7 +54,7 @@
     "shiki": "^3.20.0",
     "simple-git-hooks": "^2.13.1",
     "unist-util-visit": "latest",
-    "unocss": "latest"
+    "unocss": "^66.7.0"
   },
   "simple-git-hooks": {
     "pre-commit": "pnpm format && git add ."

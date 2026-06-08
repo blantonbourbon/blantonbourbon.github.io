@@ -3,7 +3,7 @@ import { defineConfig } from 'astro/config'
 
 import yaml from '@rollup/plugin-yaml'
 import expressiveCode from 'astro-expressive-code'
-import UnoCSS from 'unocss/astro'
+import UnoCSS from '@unocss/astro'
 
 import mdx from '@astrojs/mdx'
 
