@@ -3,8 +3,7 @@ import '../styles/index.css'
 import { useLocale } from '@utils/locale'
 import Header from './Header.astro'
 import Navbar from './Navbar.astro'
-import '@fontsource/ibm-plex-sans'
-import '@fontsource/google-sans-code'
+import '@fontsource/ibm-plex-sans/latin-400.css'
 import { SEO } from 'astro-seo'
 import Footer from './Footer.astro'
 
@@ -30,14 +29,6 @@ const fullTitle = `${title} - ${t('layout.title')}`
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width" />
     <link rel="sitemap" href="/sitemap-index.xml" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
-
-    <!-- Non-blocking resource hints -->
-    <link rel="prefetch" href="/sitemap-index.xml" blocking="render" />
-
-    <!-- Font preloading will be handled by @fontsource imports -->
     <style is:inline>
       /* Critical CSS - Above the fold styles */
       body {
@@ -176,22 +167,6 @@ const fullTitle = `${title} - ${t('layout.title')}`
             });
         });
       }
-    </script>
-
-    <!-- Non-blocking analytics and other third-party scripts -->
-    <script defer>
-      // Theme detection script - non-blocking
-      (function () {
-        const storedTheme = localStorage.getItem("theme");
-        const theme =
-          storedTheme === "dark" || storedTheme === "light"
-            ? storedTheme
-            : window.matchMedia("(prefers-color-scheme: dark)").matches
-              ? "dark"
-              : "light";
-        document.documentElement.dataset.theme = theme;
-        document.documentElement.classList.toggle("dark", theme === "dark");
-      })();
     </script>
   </body>
 </html>

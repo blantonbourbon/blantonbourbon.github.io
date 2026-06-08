@@ -19,14 +19,6 @@ export default defineConfig({
     'link-base': 'hover:cursor-pointer no-underline',
   },
 
-  // Extract commonly used utilities
-  safelist: [
-    'max-width',
-    'link-base',
-    'prose',
-    'dark:bg-stone-600',
-    'bg-gray-100',
-  ],
   presets: [
     presetUno(),
     presetIcons({

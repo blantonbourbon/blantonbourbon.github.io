@@ -9,8 +9,6 @@ import mdx from '@astrojs/mdx'
 
 import sitemap from '@astrojs/sitemap'
 
-import partytown from '@astrojs/partytown'
-
 // https://astro.build/config
 export default defineConfig({
   vite: {
@@ -41,10 +39,7 @@ export default defineConfig({
   devToolbar: {
     enabled: false,
   },
-  prefetch: {
-    prefetchAll: true,
-    defaultStrategy: 'viewport',
-  },
+  prefetch: false,
   site: 'https://blantonbourbon.github.io',
   scopedStyleStrategy: 'class',
   // trailingSlash: 'always',
@@ -79,11 +74,6 @@ export default defineConfig({
     }),
     mdx(),
     sitemap(),
-    partytown({
-      config: {
-        forward: ['dataLayer.push'],
-      },
-    }),
   ],
   output: 'static',
 })

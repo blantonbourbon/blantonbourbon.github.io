@@ -1,5 +1,3 @@
 /* Import modular CSS files */
 @import "./critical.css";
 @import "./components.css";
-@import "./prose.css";
-@import "./callouts.css";
