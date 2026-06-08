@@ -12,7 +12,8 @@
     "lint": "biome lint --write .",
     "check": "biome check --write .",
     "format:check": "biome format .",
-    "lint:check": "biome lint ."
+    "lint:check": "biome lint .",
+    "translate:zh-en": "node scripts/translate-zh-to-en.mjs"
   },
   "dependencies": {
     "@astrojs/check": "latest",

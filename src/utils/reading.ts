@@ -64,18 +64,12 @@ function cleanMarkdown(content: string): string {
   )
 }
 
-function formatCountText(
-  chineseChars: number,
-  englishWords: number,
-  locale: string,
-): string {
-  const parts: string[] = []
-  if (chineseChars > 0) parts.push(`${chineseChars} 字`)
-  if (englishWords > 0) {
-    parts.push(englishWords === 1 ? '1 word' : `${englishWords} words`)
+function formatCountText(totalCount: number, locale: string): string {
+  if (locale === 'zh') {
+    return `${totalCount} 字`
   }
-  if (parts.length > 0) return parts.join(' / ')
-  return locale === 'zh' ? '0 字' : '0 words'
+
+  return totalCount === 1 ? '1 word' : `${totalCount} words`
 }
 
 /**
@@ -105,7 +99,7 @@ export function calculateReadingStats(
     chineseCharCount: chineseChars,
     englishWordCount: englishWords,
     readingTime: Math.max(1, totalReadingTime), // 至少1分钟
-    displayText: formatCountText(chineseChars, englishWords, locale),
+    displayText: formatCountText(totalCount, locale),
   }
 }
 
