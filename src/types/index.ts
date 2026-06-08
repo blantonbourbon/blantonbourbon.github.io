@@ -3,18 +3,34 @@
 export interface Post {
   title?: string
   'title-en'?: string
-  tags?: string[]
+  displayTitle: string
+  tags: string[]
   date: string
   lastModified?: Date
   notificationTypes?: string[]
   isDraft?: boolean
   url: string
-  slug?: string
+  slug: string
+  routeSlug: string
+  locale: SupportedLocale
+}
+
+export interface PostTag {
+  name: string
+  slug: string
+  labelKey: string
+  url: string
+}
+
+export interface PostFeedItem extends Post {
+  body: string
+  link: string
 }
 
 export interface PostCollection {
   posts: Post[]
-  tags: Set<string>
+  tags: PostTag[]
+  activeTag?: PostTag
 }
 
 export interface LocaleConfig {
@@ -27,6 +43,8 @@ export type SupportedLocale = 'zh' | 'en'
 
 export interface ReadingStats {
   wordCount: number
+  chineseCharCount: number
+  englishWordCount: number
   readingTime: number // 分钟
   displayText: string
 }

@@ -22,7 +22,7 @@ export function formatDateMD(
   return date.toFormat('MM-dd')
 }
 
-export function formatDateYMD(dateStr: string | number | Date, locale = 'zh') {
+export function formatDateYMD(dateStr: string | number | Date, _locale = 'zh') {
   const months = [
     'Jan',
     'Feb',

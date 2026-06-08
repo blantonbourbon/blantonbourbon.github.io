@@ -70,22 +70,21 @@ const id = `moon-mask-`
   }
 
   /** Get the preferred system color scheme. */
-  function getPreferredColorScheme(): Theme {
+  function getPreferredColorScheme(): "dark" | "light" {
     return matchMedia("(prefers-color-scheme: light)").matches
       ? "light"
       : "dark";
   }
 
+  function resolveTheme(theme: Theme): "dark" | "light" {
+    return theme === "auto" ? getPreferredColorScheme() : theme;
+  }
+
   /** Update select menu UI, document theme, and local storage state. */
   function onThemeChange(theme: Theme): void {
-    document.documentElement.dataset["theme"] =
-      theme === "auto" ? getPreferredColorScheme() : theme;
-
-    if (theme === "dark") {
-      document.documentElement.classList.add("dark");
-    } else {
-      document.documentElement.classList.remove("dark");
-    }
+    const resolvedTheme = resolveTheme(theme);
+    document.documentElement.dataset["theme"] = resolvedTheme;
+    document.documentElement.classList.toggle("dark", resolvedTheme === "dark");
     storeTheme(theme);
   }
 

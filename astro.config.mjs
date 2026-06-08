@@ -69,7 +69,7 @@ export default defineConfig({
     }),
     expressiveCode({
       themeCssSelector: (theme) => {
-        return '.' + theme.type
+        return `.${theme.type}`
       },
       styleOverrides: {
         borderRadius: '0.5rem',

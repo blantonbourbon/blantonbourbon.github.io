@@ -1,29 +1,25 @@
-import { getCollection } from 'astro:content'
 import rss from '@astrojs/rss'
+import { getFeedPosts } from '@utils/content'
 import MarkdownIt from 'markdown-it'
 
 export const prerender = true
 
 const parser = new MarkdownIt()
 
-export async function GET({ params }) {
-  const blog = await getCollection(
-    'posts',
-    (i) => i.data.title && !i.data.isDraft && i.data.date,
-  )
-  const posts = blog
-    .sort((a, b) => (a.data.date < b.data.date ? 1 : -1))
-    .map((post) => {
-      const content = post.description || post.body
-      const html = parser.render(content)
-      return {
-        ...post.data,
-        link: `/posts/${post.slug}/`,
-        date: post.data.date,
+export async function GET() {
+  const feedPosts = await getFeedPosts()
+  const posts = feedPosts.map((post) => {
+    const content = post.body
+    const html = parser.render(content)
+    return {
+      ...post,
+      title: post.displayTitle,
+      link: post.link,
+      date: post.date,
 
-        content: html,
-      }
-    })
+      content: html,
+    }
+  })
   return new Response(
     (
       await rss({

@@ -68,8 +68,7 @@
   border-radius: 0.5rem;
   border-top-left-radius: 0.125rem;
   border-bottom-left-radius: 0.125rem;
-  padding-left: 1rem;
-  padding: 0.5rem;
+  padding: 0.5rem 0.5rem 0.5rem 1rem;
 }
 
 :root.dark

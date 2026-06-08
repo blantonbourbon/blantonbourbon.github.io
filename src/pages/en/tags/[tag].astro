@@ -1,20 +1,13 @@
 ---
-import Layout from '@layouts/Layout.astro'
 import PostsLayout from '@layouts/PostsLayout.astro'
-import { getAllPosts } from '@utils/content'
-import { useLocale } from '@utils/locale'
+import { getTagStaticPaths } from '@utils/content'
 
 export const prerender = true
-const { path, t, locale } = useLocale(Astro.url)
 const { tag } = Astro.params
-const { posts } = await getAllPosts('en', tag || '')
 
 export async function getStaticPaths() {
-  const { tags } = await getAllPosts('en', '')
-  return Array.from(tags).map((tag) => ({
-    params: { tag },
-  }))
+  return getTagStaticPaths('en')
 }
 ---
 
-<PostsLayout posts={posts} tag={tag} locale="en" />
+<PostsLayout tag={tag} locale="en" />

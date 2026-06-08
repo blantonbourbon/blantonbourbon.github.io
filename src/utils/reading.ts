@@ -4,25 +4,28 @@
 
 interface ReadingStats {
   wordCount: number
+  chineseCharCount: number
+  englishWordCount: number
   readingTime: number // 分钟
   displayText: string
 }
+
+const hanRegex = /\p{Script=Han}/gu
+const englishTokenRegex =
+  /\p{Script=Latin}+(?:['’]\p{Script=Latin}+)*|\p{Number}+(?:[.,:-]\p{Number}+)*/gu
 
 /**
  * 计算中文字符数
  */
 function countChineseChars(text: string): number {
-  const chineseRegex = /[\u4e00-\u9fff]/g
-  return (text.match(chineseRegex) || []).length
+  return (text.match(hanRegex) || []).length
 }
 
 /**
- * 计算英文单词数
+ * 计算英文单词和数字 token 数
  */
 function countEnglishWords(text: string): number {
-  // 移除中文字符后计算英文单词
-  const englishText = text.replace(/[\u4e00-\u9fff]/g, '')
-  const words = englishText.match(/\b\w+\b/g)
+  const words = text.match(englishTokenRegex)
   return words ? words.length : 0
 }
 
@@ -32,14 +35,20 @@ function countEnglishWords(text: string): number {
 function cleanMarkdown(content: string): string {
   return (
     content
+      // 移除 frontmatter
+      .replace(/^---[\s\S]*?---\s*/g, '')
       // 移除代码块
       .replace(/```[\s\S]*?```/g, '')
       // 移除行内代码
       .replace(/`[^`]*`/g, '')
-      // 移除链接
-      .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
       // 移除图片
-      .replace(/!\[([^\]]*)\]\([^)]*\)/g, '')
+      .replace(/!\[[^\]]*]\([^)]*\)/g, '')
+      // 保留链接文本
+      .replace(/\[([^\]]*)]\([^)]*\)/g, '$1')
+      .replace(/\[([^\]]*)]\[[^\]]*]/g, '$1')
+      // 移除裸链接和 HTML 标签
+      .replace(/https?:\/\/\S+/g, '')
+      .replace(/<[^>]*>/g, '')
       // 移除标题标记
       .replace(/^#{1,6}\s+/gm, '')
       // 移除列表标记
@@ -47,10 +56,26 @@ function cleanMarkdown(content: string): string {
       .replace(/^\d+\.\s+/gm, '')
       // 移除引用标记
       .replace(/^>\s+/gm, '')
+      // 移除常见 Markdown 控制字符
+      .replace(/[*_~|]/g, ' ')
       // 移除多余空白
       .replace(/\s+/g, ' ')
       .trim()
   )
+}
+
+function formatCountText(
+  chineseChars: number,
+  englishWords: number,
+  locale: string,
+): string {
+  const parts: string[] = []
+  if (chineseChars > 0) parts.push(`${chineseChars} 字`)
+  if (englishWords > 0) {
+    parts.push(englishWords === 1 ? '1 word' : `${englishWords} words`)
+  }
+  if (parts.length > 0) return parts.join(' / ')
+  return locale === 'zh' ? '0 字' : '0 words'
 }
 
 /**
@@ -73,26 +98,14 @@ export function calculateReadingStats(
   const chineseReadingTime = chineseChars / chineseReadingSpeed
   const englishReadingTime = englishWords / englishReadingSpeed
   const totalReadingTime = Math.ceil(chineseReadingTime + englishReadingTime)
-
-  // 智能判断内容主要语言
-  const isMainlyChinese = chineseChars > englishWords * 2
   const totalCount = chineseChars + englishWords
 
-  // 根据内容主要语言决定显示方式（忽略 locale 参数，因为它可能不准确）
-  if (isMainlyChinese) {
-    // 主要是中文内容：显示总字符数
-    return {
-      wordCount: totalCount,
-      readingTime: Math.max(1, totalReadingTime), // 至少1分钟
-      displayText: `${totalCount} 字`,
-    }
-  } else {
-    // 主要是英文内容：显示总单词数
-    return {
-      wordCount: totalCount,
-      readingTime: Math.max(1, totalReadingTime),
-      displayText: `${totalCount} words`,
-    }
+  return {
+    wordCount: totalCount,
+    chineseCharCount: chineseChars,
+    englishWordCount: englishWords,
+    readingTime: Math.max(1, totalReadingTime), // 至少1分钟
+    displayText: formatCountText(chineseChars, englishWords, locale),
   }
 }
 

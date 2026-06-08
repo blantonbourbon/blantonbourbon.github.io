@@ -1,12 +1,13 @@
 ---
-import { getCollection, getEntry, render } from 'astro:content'
+import { getEntry, render } from 'astro:content'
 import Layout from '@layouts/Layout.astro'
 import { formatDateYMD } from '@utils/format'
 import { useLocale } from '@utils/locale'
 import { calculateReadingStats, formatReadingTime } from '@utils/reading'
+import { getPostStaticPaths } from '@utils/content'
 
 export const prerender = true
-const { path, t, locale } = useLocale(Astro.url)
+const { t } = useLocale(Astro.url)
 let { slug } = Astro.params
 const post = await getEntry('posts', `en/${slug}`)
 if (!post) {
@@ -28,16 +29,7 @@ const displayTitle = titleEn || title
 const { Content } = await render(post)
 
 export async function getStaticPaths() {
-  const notes = await getCollection('posts', (post) =>
-    post.slug.startsWith('en/'),
-  )
-  return notes.map((note) => {
-    return {
-      params: {
-        slug: note.slug.replace('en/', ''),
-      },
-    }
-  })
+  return getPostStaticPaths('en')
 }
 ---
 

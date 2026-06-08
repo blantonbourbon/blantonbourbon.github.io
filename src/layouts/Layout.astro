@@ -182,13 +182,15 @@ const fullTitle = `${title} - ${t('layout.title')}`
     <script defer>
       // Theme detection script - non-blocking
       (function () {
+        const storedTheme = localStorage.getItem("theme");
         const theme =
-          localStorage.getItem("theme") ||
-          (window.matchMedia("(prefers-color-scheme: dark)").matches
-            ? "dark"
-            : "light");
-        document.documentElement.className =
-          theme === "dark" ? "dark mx-4" : "mx-4";
+          storedTheme === "dark" || storedTheme === "light"
+            ? storedTheme
+            : window.matchMedia("(prefers-color-scheme: dark)").matches
+              ? "dark"
+              : "light";
+        document.documentElement.dataset.theme = theme;
+        document.documentElement.classList.toggle("dark", theme === "dark");
       })();
     </script>
   </body>

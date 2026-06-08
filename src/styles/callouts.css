@@ -59,10 +59,6 @@
   padding: var(--callout-padding);
 }
 
-.callout.is-collapsible .callout-title {
-  cursor: pointer;
-}
-
 .callout-title {
   padding: var(--callout-title-padding);
   display: flex;
@@ -72,6 +68,10 @@
   line-height: 1rem;
   align-items: center;
   font-weight: 600;
+}
+
+.callout.is-collapsible .callout-title {
+  cursor: pointer;
 }
 
 .callout-content {

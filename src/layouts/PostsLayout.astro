@@ -1,24 +1,15 @@
 ---
-import { getAllPosts } from '@utils/content'
-import { slugifySpace } from '@utils/format'
+import { getPostCatalog } from '@utils/content'
 import { formatDateYMD } from '@utils/format'
 import { useLocale } from '@utils/locale'
 import Layout from '../layouts/Layout.astro'
 
-const { path, t, locale: urlLocale } = useLocale(Astro.url)
+const { t, locale: urlLocale } = useLocale(Astro.url)
 const { tag, locale: propsLocale } = Astro.props
 const locale = propsLocale || urlLocale || 'zh'
-const { posts, tags } = await getAllPosts(locale, tag)
+const { posts, activeTag } = await getPostCatalog(locale, { tag })
 
-const filterType = 'tags'
-const filterName = tag
-
-function getTitle(post: any) {
-  if (!locale || locale === 'zh') return post.title
-  const enTitle = post['title-en']
-  if (!enTitle) return post.title
-  return enTitle
-}
+const filterName = activeTag?.labelKey
 ---
 
 <Layout title={t("nav.posts")}>
@@ -26,7 +17,7 @@ function getTitle(post: any) {
     filterName && (
       <div class="mt-2">
         <span class="text-xl font-bold italic ml-2">
-          " {t(`${filterType}.` + filterName)} "
+          " {t(filterName)} "
         </span>
       </div>
     )
@@ -34,7 +25,7 @@ function getTitle(post: any) {
   <main class="mt-8">
     <ul class="list-none pl-0">
       {
-        posts.map((post: any) => {
+        posts.map((post) => {
           return (
             <li class="my-4">
               <div class="flex flex-nowrap">
@@ -50,7 +41,7 @@ function getTitle(post: any) {
                     href={post.url}
                     class="link-static"
                   >
-                    {getTitle(post)}
+                    {post.displayTitle}
                   </a>
                 </span>
               </div>

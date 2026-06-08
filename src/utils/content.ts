@@ -1,58 +1,165 @@
-import { getCollection } from 'astro:content'
+import { getCollection, type CollectionEntry } from 'astro:content'
 import { DateTime } from 'luxon'
+import type {
+  Post,
+  PostCollection,
+  PostFeedItem,
+  PostTag,
+  SupportedLocale,
+} from '../types'
+import { slugifySpace } from './format'
 
-interface PostData {
-  title?: string
-  'title-en'?: string
-  tags?: string[]
-  date: string
-  isDraft?: boolean
-  url: string
+type PostEntry = CollectionEntry<'posts'>
+
+interface PostCatalogOptions {
+  tag?: string
 }
 
-export const getAllPosts = async (locale: string, tag: string) => {
-  const allPosts = await getCollection('posts')
+const DEFAULT_LOCALE: SupportedLocale = 'zh'
 
-  // 根据 locale 过滤文章
-  const languageFilteredPosts = allPosts.filter((post) => {
-    const isChinesePost = post.slug.startsWith('zh/')
-    const isEnglishPost = post.slug.startsWith('en/')
+function normalizeLocale(locale?: string): SupportedLocale {
+  return locale === 'en' ? 'en' : DEFAULT_LOCALE
+}
 
-    // 如果没有指定语言或者是中文环境，显示中文文章
-    if (!locale || locale === 'zh') {
-      return isChinesePost
-    }
-    // 如果是英文环境，显示英文文章
-    return isEnglishPost
-  })
+function getEntryLocale(slug: string): SupportedLocale | undefined {
+  if (slug.startsWith('zh/')) return 'zh'
+  if (slug.startsWith('en/')) return 'en'
+}
 
-  const filteredPosts = languageFilteredPosts
-    .map((i) => {
-      // 根据语言生成正确的 URL
-      const cleanSlug = i.slug.replace(/^(zh|en)\//, '')
-      const langPrefix = i.slug.startsWith('zh/') ? 'zh' : 'en'
-      return {
-        ...i.data,
-        url: `/${langPrefix}/posts/${cleanSlug}/`,
-        slug: i.slug,
-      }
-    })
-    .filter((d): d is PostData & { slug: string } => {
-      if (!d) return false
-      if (tag) {
-        return Boolean(d.date && !d.isDraft && d.tags?.includes(tag))
-      }
-      return Boolean(!d.isDraft && d.date)
-    })
-    .sort((a, b) => {
-      return (
-        DateTime.fromJSDate(new Date(b.date)).toMillis() -
-        DateTime.fromJSDate(new Date(a.date)).toMillis()
-      )
-    })
+function getRouteSlug(slug: string): string {
+  return slug.replace(/^(zh|en)\//, '')
+}
+
+function getTagSlug(tag: string): string {
+  return slugifySpace(tag) ?? tag
+}
+
+export function getPostUrl(locale: string, routeSlug: string): string {
+  const normalizedLocale = normalizeLocale(locale)
+  return `/${normalizedLocale}/posts/${routeSlug}/`
+}
+
+export function getTagUrl(locale: string, tag: string): string {
+  const normalizedLocale = normalizeLocale(locale)
+  return `/${normalizedLocale}/tags/${getTagSlug(tag)}/`
+}
+
+function isVisiblePost(entry: PostEntry): boolean {
+  return Boolean(!entry.data.isDraft && entry.data.date)
+}
+
+function getDisplayTitle(entry: PostEntry, locale: SupportedLocale): string {
+  const routeSlug = getRouteSlug(entry.slug)
+  if (locale === 'en')
+    return entry.data['title-en'] || entry.data.title || routeSlug
+  return entry.data.title || entry.data['title-en'] || routeSlug
+}
+
+function getDateMillis(date: string): number {
+  const isoDate = DateTime.fromISO(date)
+  if (isoDate.isValid) return isoDate.toMillis()
+  return DateTime.fromJSDate(new Date(date)).toMillis()
+}
+
+function sortPosts(posts: Post[]): Post[] {
+  return [...posts].sort(
+    (a, b) => getDateMillis(b.date) - getDateMillis(a.date),
+  )
+}
+
+function toCatalogPost(entry: PostEntry): Post | undefined {
+  const locale = getEntryLocale(entry.slug)
+  if (!locale || !isVisiblePost(entry)) return
+
+  const routeSlug = getRouteSlug(entry.slug)
+  const tags = entry.data.tags ?? []
 
   return {
-    posts: filteredPosts,
-    tags: new Set(filteredPosts.filter((i) => i.tags).flatMap((i) => i.tags!)),
+    ...entry.data,
+    displayTitle: getDisplayTitle(entry, locale),
+    tags,
+    url: getPostUrl(locale, routeSlug),
+    slug: entry.slug,
+    routeSlug,
+    locale,
   }
+}
+
+function toTag(locale: SupportedLocale, tag: string): PostTag {
+  return {
+    name: tag,
+    slug: getTagSlug(tag),
+    labelKey: `tags.${tag}`,
+    url: getTagUrl(locale, tag),
+  }
+}
+
+function collectTags(posts: Post[], locale: SupportedLocale): PostTag[] {
+  const seen = new Set<string>()
+  const tags: PostTag[] = []
+  for (const post of posts) {
+    for (const tag of post.tags) {
+      if (seen.has(tag)) continue
+      seen.add(tag)
+      tags.push(toTag(locale, tag))
+    }
+  }
+  return tags
+}
+
+function findTag(tags: PostTag[], tag: string): PostTag | undefined {
+  return tags.find((item) => item.name === tag || item.slug === tag)
+}
+
+export const getPostCatalog = async (
+  locale: string = DEFAULT_LOCALE,
+  options: PostCatalogOptions = {},
+): Promise<PostCollection> => {
+  const normalizedLocale = normalizeLocale(locale)
+  const allPosts = await getCollection('posts')
+  const localePosts = sortPosts(
+    allPosts.map(toCatalogPost).filter((post): post is Post => {
+      if (!post) return false
+      return post.locale === normalizedLocale
+    }),
+  )
+  const tags = collectTags(localePosts, normalizedLocale)
+  const activeTag = options.tag ? findTag(tags, options.tag) : undefined
+  const posts = activeTag
+    ? localePosts.filter((post) => post.tags.includes(activeTag.name))
+    : localePosts
+
+  return {
+    posts,
+    tags,
+    activeTag,
+  }
+}
+
+export async function getTagStaticPaths(locale: string) {
+  const { tags } = await getPostCatalog(locale)
+  return tags.map((tag) => ({
+    params: { tag: tag.slug },
+  }))
+}
+
+export async function getPostStaticPaths(locale: string) {
+  const { posts } = await getPostCatalog(locale)
+  return posts.map((post) => ({
+    params: { slug: post.routeSlug },
+  }))
+}
+
+export async function getFeedPosts(): Promise<PostFeedItem[]> {
+  const allPosts = await getCollection('posts')
+  return sortPosts(
+    allPosts.map(toCatalogPost).filter((post): post is Post => Boolean(post)),
+  ).map((post) => {
+    const entry = allPosts.find((item) => item.slug === post.slug)
+    return {
+      ...post,
+      body: entry?.body ?? '',
+      link: post.url,
+    }
+  })
 }
